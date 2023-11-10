@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('data_plans', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->float('price');
+            $table->float('price',10,2);
             $table->foreignId('operator_card_id')->constrained('operator_cards');
             $table->timestamps();
         });
