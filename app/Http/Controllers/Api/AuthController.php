@@ -11,6 +11,9 @@ use Melihovv\Base64ImageDecoder\Base64ImageDecoder;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+// use Tymon\JWTAuth\Facades\JwtAuth;
+use Illuminate\Support\Facades\Auth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
@@ -48,8 +51,8 @@ class AuthController extends Controller
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'username' => $request->email,
-                'password' => bcrypt($request->username),
+                'username' => $request->name,
+                'password' => bcrypt($request->password),
                 'profile_picture' => $profilePicture,
                 'ktp' => $ktp,
                 'verified' => ($ktp) ? true : false,
@@ -65,12 +68,41 @@ class AuthController extends Controller
         DB::commit();
 
         } catch (\Throwable $th) {
-            
+
         DB::rollback();
             return response()->json(['message' => $th->getMessage()],500);
         }
     }
 
+
+    public function login(Request $request) {
+        $credentials = $request->only('email','password');        
+
+        $validator = Validator::make($credentials,[
+            'email' => 'required|email',
+            'password' => 'required|string|min:6'
+        ]);
+
+        if ($validator->fails()){
+            return response()->json(['errors'=> $validator->messages()],400);
+        }
+
+        try {
+            if(! $token = auth()->attempt($credentials))
+             {
+                return response()->json(['message' => 'Login credential are invalid'], 401);
+            }
+            $userResponse = getUser($request->email);
+            $userResponse->token = $token;
+            $userResponse->token_expires_in = auth()->factory()->getTTl()* 60;
+            $userResponse->token_type = 'bearer';
+
+            return response()->json($userResponse);
+            
+        } catch (\JWTException $th) {
+            return response()->json(['message'=> $th->getMessage()],500);
+        }
+    }
 
     private function generateCardNumber($length) {
         $result = '';
