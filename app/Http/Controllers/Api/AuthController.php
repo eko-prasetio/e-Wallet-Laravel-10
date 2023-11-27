@@ -67,7 +67,7 @@ class AuthController extends Controller
             
         DB::commit();
 
-        $token = JWTAuth::attempt(['email'=> $request->email, 'password'=>$request->password]);
+        $token = Auth::attempt(['email'=> $request->email, 'password'=>$request->password]);
         $userResponse = getUser($request->email);
         $userResponse->token = $token;
         $userResponse->token_expires_in = auth()->factory()->getTTl()* 60;
@@ -107,7 +107,7 @@ class AuthController extends Controller
 
             return response()->json($userResponse);
 
-        } catch (\JWTException $th) {
+        } catch (JWTException $th) {
             return response()->json(['message'=> $th->getMessage()],500);
         }
     }
