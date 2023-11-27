@@ -5,6 +5,7 @@
 /public/storage
 /storage/*.key
 /vendor
+/app/helpers.php
 .env
 .env.backup
 .env.production
