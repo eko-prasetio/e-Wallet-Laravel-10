@@ -48,11 +48,69 @@ class TopUpController extends Controller
             ]);
 
             //call to midtrans
+            $params = $this->buildMitransParameters([
+                'transaction_code' => $transactionType->code,
+                'amount' => $transaction->amount,
+                'payment_method' => $paymentMethod->code
+            ]); 
+            $midtrans = $this->callMidtrans($params);   
+
             DB::commit();
+            return response()->json($midtrans);
         } catch (\Throwable $th) {
             DB::rollback();
 
             return response()->json(['message' => $th->getMessage()], 500);
         }
+    }
+
+    private function callMidtrans(array $params) {
+        \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        \Midtrans\Config::$isProduction = (bool) env('MIDTRANS_IS_PRODUCTION'); // true or false
+        \Midtrans\Config::$isSanitized = env('MIDTRANS_IS_SANITIZED');
+        \Midtrans\Config::$is3ds = (bool) env('MIDTRANS_IS_3DS');
+
+        $createTransaction = \Midtrans\Snap::createTransaction($params);
+
+        return [
+            'redirect_url' => $createTransaction->redirect_url,
+            'token' => $createTransaction->token
+        ];
+    }
+
+    private function buildMitransParameters(array $params) {
+        $transactionDetails = [
+            'order_id' => $params['transaction_code'],
+            'gross_amount' => $params['amount']
+        ];
+
+        $user = auth()->user();
+        $splitName = $this->splitName($user->name);
+        $customerDetails = [
+            'first_name' => $splitName['first_name'],
+            'last_name' => $splitName['last_name'],
+            'email' => $user->email
+        ];
+        $enabledPayment = [
+            $params['payment_method']
+        ];
+
+        return [
+            'transaction_details' => $transactionDetails,
+            'customer_details' => $customerDetails,
+            'enabled_payments' => $enabledPayment
+        ];
+
+    }
+
+    private function splitName($fullName) {
+        $name = explode(' ', $fullName);
+        // 'simone philis ' => ['simone', 'philips]
+        $lastName = count($name) > 1 ? array_pop($name) : $fullName;
+        $firstName = implode(' ', $name);
+        return [
+            'first_name' => $firstName,
+            'last_name' => $lastName
+        ];
     }
 }
