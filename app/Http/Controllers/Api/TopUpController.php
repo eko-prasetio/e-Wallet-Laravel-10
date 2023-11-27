@@ -43,13 +43,13 @@ class TopUpController extends Controller
                 'transaction_type_id' => $transactionType->id,
                 'amount' => $request->amount,
                 'transaction_code' => strtoupper(Str::random(10)),
-                'description' => 'Top Up Vie'.$paymentMethod->name,
+                'description' => 'Top Up Via '.$paymentMethod->name,
                 'status' => 'pending'
             ]);
 
             //call to midtrans
             $params = $this->buildMitransParameters([
-                'transaction_code' => $transactionType->code,
+                'transaction_code' => $transaction->transaction_code,
                 'amount' => $transaction->amount,
                 'payment_method' => $paymentMethod->code
             ]); 

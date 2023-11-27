@@ -34,6 +34,7 @@ class WebHookController extends Controller
                 } else if ($transactionStatus == 'settlement'){
                     // TODO set transaction status on your database to 'success'
                     // and response with 200 OK
+                    $status = 'success';
                 } else if ($transactionStatus == 'cancel' ||
                   $transactionStatus == 'deny' ||
                   $transactionStatus == 'expire'){
