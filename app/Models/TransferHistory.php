@@ -12,7 +12,7 @@ class TransferHistory extends Model
 
     protected $fillable = [
         'sender_id',
-        'receiver_id',
+        'receiver',
         'transaction_code'
     ];
 }
